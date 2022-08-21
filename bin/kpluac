@@ -1,0 +1,10 @@
+#!/usr/bin/env php
+<?php
+
+$filename = __DIR__ . '/../tests/luac.out';
+
+$stream = fopen($filename, 'rb');
+var_dump($meta = stream_get_meta_data($stream));
+var_dump($stream,get_resource_type($stream));
+var_dump(stream_get_contents($stream));
+fclose($stream);

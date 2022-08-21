@@ -1,0 +1,15 @@
+{
+    "name": "polynds/kplua",
+    "autoload": {
+        "psr-4": {
+            "Kplua\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "phpstan/phpstan": "^1.0"
+    }
+}
