@@ -30,4 +30,6 @@ class BinaryChunk
         $reader->readByte();
         return $reader->readProto('');
     }
+
+
 }

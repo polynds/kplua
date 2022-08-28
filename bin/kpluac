@@ -1,10 +1,46 @@
 #!/usr/bin/env php
 <?php
 
-$filename = __DIR__ . '/../tests/luac.out';
+use Kplua\Utils\Platform;
 
-$stream = fopen($filename, 'rb');
-var_dump($meta = stream_get_meta_data($stream));
-var_dump($stream,get_resource_type($stream));
-var_dump(stream_get_contents($stream));
-fclose($stream);
+require_once __DIR__ . '/../vendor/autoload.php';
+//var_dump(Platform::bigEndian());
+
+$filename = __DIR__ . '/../tests/luac.out';
+$handle = fopen($filename, 'rb');
+$data = '';
+while (! feof($handle)) {
+    $data .= fread($handle, 8192);
+}
+fclose($handle);
+
+$strArr = unpack('H8', $data);
+var_dump(hex2bin($strArr[1]),'0x'.$strArr[1] == 0x1b4c7561);
+exit();
+
+$read = new \Kplua\BinChunk\Reader($data);
+var_dump($read->readBytes(4));
+exit();
+
+//TODO 很奇怪，PHP的这个unpack函数为啥非要按照所需字节数x2来识别数据呢？不知道跟系统64位有没有关系，毕竟现在32位的系统很少用了
+$header_format =
+    'H8signature/' . # TODO 为啥是8字节的呢？是不是跟机器是64位的有关系？那么在32位机器上是不是H4呢
+    'H2version/' .
+    'H2format/' .
+    'H12luacData/' .
+    'H2cintSize/' .
+    'H2sizetSize/' .
+    'H2instructionSize/' .
+    'H2luaIntergerSize/' .
+    'H2luaNumberSize/' .
+    'H16luacInt/' . // 这里的16是从luaIntergerSize所占用字节数x2来的
+    'dluacNum/' .
+    'H2no/' .
+    'ISourceLength/' .
+    'A32Source';
+$header = unpack($header_format, $data);
+var_dump($header);
+var_dump('-----------------');
+var_dump(unpack('x4/H2', $data));
+var_dump(unpack('x35/A32Source', $data));
+var_dump('-----------------');

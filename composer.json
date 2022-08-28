@@ -3,7 +3,10 @@
     "autoload": {
         "psr-4": {
             "Kplua\\": "src/"
-        }
+        },
+        "files": [
+            "src/Utils/functions.php"
+        ]
     },
     "require": {
         "php": ">=7.4"
