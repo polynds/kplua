@@ -14,6 +14,23 @@ while (! feof($handle)) {
 }
 fclose($handle);
 
+$reader = new \Kplua\Binary\Reader($data);
+var_dump(($reader->readHighHexString()));
+var_dump(($reader->readHighHexString()));
+var_dump(($reader->readHighHexString()));
+var_dump(($reader->readHighHexString()));
+var_dump(($reader->readHighHexString()));
+var_dump(($reader->readHighHexString()));
+var_dump(($reader->readHighHexString()));
+var_dump(($reader->readHighHexString()));
+var_dump(chr($reader->readInt8()));
+var_dump(chr($reader->readInt8()));
+var_dump(chr($reader->readInt8()));
+var_dump(chr($reader->readInt8()));
+
+die();
+
+
 $strArr = unpack('H8', $data);
 var_dump(hex2bin($strArr[1]),'0x'.$strArr[1] == 0x1b4c7561);
 exit();
