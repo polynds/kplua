@@ -1,45 +1,52 @@
 #!/usr/bin/env php
 <?php
-
+/**
+ * happy coding!!!
+ */
 use Kplua\Utils\Platform;
 
 require_once __DIR__ . '/../vendor/autoload.php';
-//var_dump(Platform::bigEndian());
+
+var_dump("1b4c7561"==0x1b4c7561);die();
+
+// var_dump(Platform::bigEndian());
+
+//$s = static function (int $arg){
+//    return ($arg + ($arg % 2)) / 2;
+//};
+//var_dump($s(1));
+//var_dump($s(2));
+//var_dump($s(3));
+//var_dump($s(4));
+//var_dump($s(5));
+//die();
+
 
 $filename = __DIR__ . '/../tests/luac.out';
 $handle = fopen($filename, 'rb');
-$data = '';
-while (! feof($handle)) {
-    $data .= fread($handle, 8192);
-}
+$data = fread($handle, filesize($filename));
+// while (! feof($handle)) {
+//    $data .= fread($handle, 8192);
+// }
 fclose($handle);
 
 $reader = new \Kplua\Binary\Reader($data);
-var_dump(($reader->readHighHexString()));
-var_dump(($reader->readHighHexString()));
-var_dump(($reader->readHighHexString()));
-var_dump(($reader->readHighHexString()));
-var_dump(($reader->readHighHexString()));
-var_dump(($reader->readHighHexString()));
-var_dump(($reader->readHighHexString()));
-var_dump(($reader->readHighHexString()));
-var_dump(chr($reader->readInt8()));
-var_dump(chr($reader->readInt8()));
+ var_dump(($reader->readHighHexStr(32)));
+var_dump(chr($reader->readInt32()));
 var_dump(chr($reader->readInt8()));
 var_dump(chr($reader->readInt8()));
 
-die();
-
+exit();
 
 $strArr = unpack('H8', $data);
-var_dump(hex2bin($strArr[1]),'0x'.$strArr[1] == 0x1b4c7561);
+var_dump(hex2bin($strArr[1]), '0x' . $strArr[1] == 0x1B4C7561);
 exit();
 
 $read = new \Kplua\BinChunk\Reader($data);
 var_dump($read->readBytes(4));
 exit();
 
-//TODO 很奇怪，PHP的这个unpack函数为啥非要按照所需字节数x2来识别数据呢？不知道跟系统64位有没有关系，毕竟现在32位的系统很少用了
+// TODO 很奇怪，PHP的这个unpack函数为啥非要按照所需字节数x2来识别数据呢？不知道跟系统64位有没有关系，毕竟现在32位的系统很少用了
 $header_format =
     'H8signature/' . # TODO 为啥是8字节的呢？是不是跟机器是64位的有关系？那么在32位机器上是不是H4呢
     'H2version/' .
