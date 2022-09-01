@@ -36,9 +36,9 @@ class ByteOrder
 
     public static function checkOrder(): string
     {
-        $data = 0x1200;
-        $bytes = pack('s', $data);
-        $bigEndian = ord($bytes[0]) === 0x12; // 是否为大端序
+        $bin = pack('L', 0x12345678);
+        $hex = bin2hex($bin);
+        $bigEndian = ord(pack('H2', $hex)) === 0x78; // 是否为大端序
         return $bigEndian ? self::BIG_ENDIAN : self::LITTLE_ENDIAN;
     }
 }
