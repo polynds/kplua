@@ -6,13 +6,11 @@ declare(strict_types=1);
  */
 namespace Kplua\Binary;
 
-class Reader implements Unpackable
+class Reader extends BinaryParse implements Unpackable
 {
-    protected string $data;
-
     public function __construct(string $data)
     {
-        $this->data = $data;
+        parent::__construct($data);
     }
 
     public function readInt8()
@@ -139,16 +137,9 @@ class Reader implements Unpackable
     /**
      * 以\0结尾的字符串.
      */
-    public function readNULPaddedStr(int $length): string
+    public function readNULLPaddedStr(int $length): string
     {
         return (string) self::unpack('A*', $this->readBytes($length));
-    }
-
-    protected function readBytes(int $length = 1)
-    {
-        $bytes = substr($this->data, 0, $length);
-        $this->data = substr($this->data, $length, -1);
-        return $bytes;
     }
 
     protected static function unpack(string $format, string $string, int $offset = 0)
