@@ -1,18 +1,25 @@
 {
-    "name": "polynds/kplua",
-    "autoload": {
-        "psr-4": {
-            "Kplua\\": "src/"
-        },
-        "files": [
-            "src/Utils/functions.php"
-        ]
+  "name": "polynds/kplua",
+  "autoload": {
+    "psr-4": {
+      "Kplua\\": "src/"
     },
-    "require": {
-        "php": ">=7.4"
-    },
-    "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.0",
-        "phpstan/phpstan": "^1.0"
+    "files": [
+      "src/Utils/functions.php"
+    ]
+  },
+  "require": {
+    "php": ">=7.4",
+    "polynds/binary-parse": "~1.0"
+  },
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^3.0",
+    "phpstan/phpstan": "^1.0"
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/polynds/BinaryParse.git"
     }
+  ]
 }
