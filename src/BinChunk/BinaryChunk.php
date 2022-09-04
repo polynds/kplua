@@ -23,13 +23,11 @@ class BinaryChunk
      */
     protected $mainFunc;
 
-    public function undump($data): Prototype
+    public function undump(string $data): Prototype
     {
         $reader = (new Reader($data));
         $reader->checkHeader();
-        $reader->readByte();
+        $reader->readUpvalue();
         return $reader->readProto('');
     }
-
-
 }

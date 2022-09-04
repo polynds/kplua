@@ -6,54 +6,85 @@ declare(strict_types=1);
  */
 namespace Kplua\BinChunk;
 
+use Kplua\Utils\Transform;
+use Polynds\BinaryParse\Reader as BinaryReader;
+
 class Reader
 {
     protected string $data;
 
-    protected int $byte = 0;
+    protected BinaryReader $reader;
 
     public function __construct(string $data)
     {
         $this->data = $data;
     }
 
+    public function readSignature(): string
+    {
+        return Transform::ascll2Str([
+            $this->reader->readUInt8(),
+            $this->reader->readUInt8(),
+            $this->reader->readUInt8(),
+            $this->reader->readUInt8(),
+        ]);
+    }
+
+    public function readLuaData(): string
+    {
+        return Transform::ascll2Hex([
+            $this->reader->readUInt8(),
+            $this->reader->readUInt8(),
+        ]) .
+        Transform::ASCII2ControlChar([
+            $this->reader->readUInt8(),
+            $this->reader->readUInt8(),
+        ]) .
+        Transform::ascll2Str([
+            $this->reader->readUInt8(),
+        ]) .
+        Transform::ASCII2ControlChar([
+            $this->reader->readUInt8(),
+        ]);
+    }
+
     public function checkHeader()
     {
-        if ($this->readBytes(4) != HeaderConstants::LUA_SIGNATURE) {
+        if ($this->readSignature() != HeaderConstants::LUA_SIGNATURE) {
             panic('not a precompiled chunk!');
         }
 
-        if ($this->readByte() != HeaderConstants::LUAC_VERSION) {
+        if ($this->reader->readUInt8() != HeaderConstants::LUAC_VERSION) {
             panic('version mismatch!');
         }
 
-        if ($this->readByte() != HeaderConstants::LUAC_FORMAT) {
+        if ($this->reader->readUInt8() != HeaderConstants::LUAC_FORMAT) {
             panic('format mismatch!');
         }
 
-        if ($this->readBytes(6) != HeaderConstants::LUAC_DATA) {
+        if ($this->readLuaData() != HeaderConstants::LUAC_DATA) {
             panic('corrupted!');
         }
 
-        if ($this->readByte() != HeaderConstants::CINT_SIZE) {
+        if ($this->reader->readUInt8() != HeaderConstants::CINT_SIZE) {
             panic('int size mismatch!');
         }
 
-        if ($this->readByte() != HeaderConstants::CSZIET_SIZE) {
+        if ($this->reader->readUInt8() != HeaderConstants::CSZIET_SIZE) {
             panic('size_t size mismatch!');
         }
 
-        if ($this->readByte() != HeaderConstants::INSTRUCTION_SIZE) {
+        if ($this->reader->readUInt8() != HeaderConstants::INSTRUCTION_SIZE) {
             panic('instruction size mismatch!');
         }
 
-        if ($this->readByte() != HeaderConstants::LUA_INTEGER_SIZE) {
+        if ($this->reader->readUInt8() != HeaderConstants::LUA_INTEGER_SIZE) {
             panic('lua_integer size mismatch!');
         }
-        if ($this->readByte() != HeaderConstants::LUA_NUMBER_SIZE) {
+        if ($this->reader->readUInt8() != HeaderConstants::LUA_NUMBER_SIZE) {
             panic('lua_number size mismatch!');
         }
-        if ($this->readLuaInteger() != HeaderConstants::LUAC_INT_SMALL_ENDIAN) {
+        if ($this->readLuaInteger() != HeaderConstants::LUAC_INT) {
             panic('endianness size mismatch!');
         }
         if ($this->readLuaNumber() != HeaderConstants::LUAC_NUM) {
@@ -61,59 +92,60 @@ class Reader
         }
     }
 
-    public function readByte()
+    public function readLuaInteger(): int
     {
-        $b = unpack('H1', $this->data, $this->byte);
-        $this->byte += 2;
-        return $b;
+        return $this->reader->readUInt64();
     }
 
-    public function readUint32()
+    public function readLuaNumber(): float
     {
-        $b = unpack('V4', $this->data, $this->byte);
-        $this->byte += 4;
-        return $b;
+        return $this->reader->readDouble();
     }
 
-    public function readUint64()
+    public function readUpvalue(): int
     {
-        $b = unpack('P8', $this->data, $this->byte);
-        $this->byte += 8;
-        return $b;
+        return $this->reader->readUInt8();
     }
 
-    public function readLuaInteger()
+    public function readString(): string
     {
-        return (int) $this->readUint64();
-    }
-
-    public function readLuaNumber()
-    {
-        return (float) $this->readUint64();
-    }
-
-    public function readString()
-    {
-        $size = $this->readByte();
+        $size = $this->reader->readUInt8();
         if ($size == 0) {
             return '';
         }
+
         if ($size == 0xFF) {
-            $size = $this->readUint64();
+            $size = $this->reader->readUInt64();
         }
 
-        return $this->readBytes($size - 1);
+        return $this->reader->readNULLPaddedStr($size - 1);
     }
 
-    public function readBytes(int $size)
+    public function readCode(): array
     {
-        $byte = $size * 2;
-        $b = unpack("H{$byte}", $this->data, $this->byte);
-        $this->byte += $size;
-        return $b;
+        $size = $this->reader->readUInt8();
+        $code = [];
+        while ($size-- > 0) {
+            $code[] = $this->reader->readUInt32();
+        }
+
+        return $code;
     }
 
-    public function readProto(string $string): Prototype
+    public function readProto(string $parentSource = ''): Prototype
     {
+        $source = $this->readString();
+        if (empty($source)) {
+            $source = $parentSource;
+        }
+
+        return (new Prototype())
+            ->setSource($source)
+            ->setLineDefined($this->reader->readUInt32())
+            ->setLastLineDefined($this->reader->readUInt32())
+            ->setNumParams($this->reader->readUInt8())
+            ->setIsVararg($this->reader->readUInt8())
+            ->setMaxStackSize($this->reader->readUInt8())
+            ->setCode($this->readCode());
     }
 }
